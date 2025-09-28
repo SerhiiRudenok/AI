@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	{% load static %}
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="{% static 'myapp/css/style.css' %}">
+	<title>
+		{% block title %}
+		{% endblock %}
+	</title>
+</head>
+<body>
+	<div class="container">
+		<div class="sidebar">
+			<div class="image-container">
+				<img src="{% static 'myapp/images/logo.png' %}" alt="logo.png">
+			</div>
+			<hr>
+			<div class="navbar">
+				<a class="global-button" href="{% url 'index' %}">На головну</a>
+			</div>
+		</div>
+
+		<div class="table-content">
+			{% block content %}
+			{% endblock %}
+		</div>
+	</div>
+</body>
+</html>
