@@ -44,18 +44,19 @@ def index_page(request):
             response = now_kyiv.strftime("%H:%M:%S")
         elif user_input == "очистити чат":
             chat_history.clear()
-            response = 'Чат очищено. Почнемо спілкування. Введіть "дата" або "час"'
+            response = ""
         else:
             last_response = list(chat_history.values())[-1]["bot"] if chat_history else None
             response = random.choice(random_responses)
             while response == last_response:
                 response = random.choice(random_responses)
 
-        index = len(chat_history)
-        chat_history[index] = {
-            "user": user_input,
-            "bot": response
-        }
+        if user_input != "очистити чат":
+            index = len(chat_history)
+            chat_history[index] = {
+                "user": user_input,
+                "bot": response
+            }
 
     context = {
         "chat_history": chat_history.values()
