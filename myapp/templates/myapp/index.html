@@ -1,9 +1,30 @@
 {% extends 'myapp/template.html' %}
 
-{% block title %} Головна сторінка {% endblock %}
+{% block title %} Чат без бази даних {% endblock %}
 
 {% block content %}
-    <div class="index-reklama">
-        <h2 class="index-title">{{ message }}</h2>
+<div class="chat-box">
+    <div class="chat-output">
+        {% if chat_history %}
+            {% for item in chat_history %}
+                <div class="chat-message user"><strong>Запит:</strong> {{ item.user }}</div>
+                <div class="chat-message bot"><strong>Відповідь:</strong> {{ item.bot }}</div>
+                <br>
+            {% endfor %}
+        {% else %}
+            <div class="chat-message bot">Введіть "дата" або "час" </div>
+            <br>
+        {% endif %}
     </div>
+
+    <hr>
+
+    <div class="base-card">
+        <form method="post" class="chat-form">
+            {% csrf_token %}
+            <input type="text" name="user_input" placeholder="Напишіть: дата або час" required>
+            <button type="submit">Відправити</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
