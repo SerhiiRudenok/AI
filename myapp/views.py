@@ -43,7 +43,10 @@ def index_page(request):
         elif user_input == "час":
             response = now_kyiv.strftime("%H:%M:%S")
         else:
+            last_response = list(chat_history.values())[-1]["bot"] if chat_history else None
             response = random.choice(random_responses)
+            while response == last_response:
+                response = random.choice(random_responses)
 
         index = len(chat_history)
         chat_history[index] = {
