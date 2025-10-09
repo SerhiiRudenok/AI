@@ -28,6 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['ai-pv311.up.railway.app', '127.0.0.1', 'localhost']
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://ai-pv311.up.railway.app"
+]
 
 # Application definition
 
