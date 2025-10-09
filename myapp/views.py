@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from datetime import datetime
+import pytz  # для роботи з часовими поясами
 import random
 
 # Випадкові відповіді
@@ -33,10 +34,14 @@ def index_page(request):
     if request.method == "POST":
         user_input = request.POST.get("user_input", "").strip().lower()
 
+        # Київський час
+        kyiv_tz = pytz.timezone("Europe/Kyiv")
+        now_kyiv = datetime.now(kyiv_tz)
+
         if user_input == "дата":
-            response = datetime.now().strftime("%d.%m.%Y")
+            response = now_kyiv.strftime("%d.%m.%Y")
         elif user_input == "час":
-            response = datetime.now().strftime("%H:%M:%S")
+            response = now_kyiv.strftime("%H:%M:%S")
         else:
             response = random.choice(random_responses)
 

@@ -1,6 +1,6 @@
 {% extends 'myapp/template.html' %}
 
-{% block title %} Чат без бази даних {% endblock %}
+{% block title %} Чат бот {% endblock %}
 
 {% block content %}
 <div class="chat-box">
@@ -27,4 +27,14 @@
         </form>
     </div>
 </div>
+
+<script>
+    window.onload = function() {
+        const chatOutput = document.querySelector('.chat-output');
+        if (chatOutput) {
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+    };
+</script>
+
 {% endblock %}
