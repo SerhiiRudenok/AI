@@ -42,6 +42,9 @@ def index_page(request):
             response = now_kyiv.strftime("%d.%m.%Y")
         elif user_input == "час":
             response = now_kyiv.strftime("%H:%M:%S")
+        elif user_input == "очистити чат":
+            chat_history.clear()
+            response = 'Чат очищено. Почнемо спілкування. Введіть "дата" або "час"'
         else:
             last_response = list(chat_history.values())[-1]["bot"] if chat_history else None
             response = random.choice(random_responses)
