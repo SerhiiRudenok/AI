@@ -1,4 +1,10 @@
 /* ======= Загальні стилі ======= */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     width: auto;
     height: auto;
@@ -11,28 +17,35 @@ body {
     background-repeat: no-repeat;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 /* ======= Шаблон template.html ======= */
 .container {
-    width: 85%;
+    width: 95%;
     max-width: 1200px;
-    max-height: 730px;
+    min-height: 100vh; /* займає всю висоту вікна браузера */
     background-color: #ffffffdd;
     backdrop-filter: blur(5px);
     border-radius: 12px;
-    padding: 30px;
+    padding: 20px;
     display: flex;
-    flex-direction: row;
-    gap: 40px;
+    flex-wrap: wrap; /* дозволяє переносити блоки */
+    gap: 20px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar {
-    width: 220px;
+    width: 100%;
+    max-width: 220px;
     background-color: lightgray;
     border-radius: 10px;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    flex-shrink: 0;
 }
+
 
 .image-container {
     margin: auto;
@@ -75,9 +88,8 @@ body {
 }
 
 .table-content {
-    width: 70%;
     flex: 1;
-    min-height: 690px;
+    min-width: 280px;
     padding: 20px 10px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -95,7 +107,7 @@ body {
 }
 
 .chat-output {
-    max-height: 600px;
+    max-height: 80vh;
     overflow-y: auto;
     padding-right: 10px;
     font-size: 18px;
@@ -140,7 +152,7 @@ body {
     margin-bottom: 20px;
 }
 
-.chat-message2 {
+.chat-message {
     margin-bottom: 12px;
     padding: 10px 14px;
     border-radius: 8px;
@@ -148,13 +160,57 @@ body {
     word-wrap: break-word;
 }
 
-.chat-message.user2 {
+.chat-message.user {
     background-color: #d1e7dd;
     text-align: right;
 }
 
-.chat-message.bot2 {
+.chat-message.bot{
     background-color: #e2e3e5;
     text-align: left;
 }
 
+
+/* ======= Для мобільних ======= */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sidebar {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .global-button {
+        width: 100%;
+    }
+
+    .chat-form {
+        flex-direction: column;
+    }
+
+    .chat-form input[type="text"],
+    .chat-form button {
+        width: 100%;
+    }
+
+    .chat-output {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+  .image-container img {
+    width: 120px;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.chat-box {
+  width: 100%;
+}
