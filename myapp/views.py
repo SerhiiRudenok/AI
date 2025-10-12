@@ -2,6 +2,7 @@ from django.shortcuts import render
 from datetime import datetime
 import pytz  # для роботи з часовими поясами
 import random
+import re
 
 # Випадкові відповіді
 random_responses = [
@@ -30,7 +31,9 @@ chat_history = {}
 
 def index_page(request):
     if request.method == "POST":
-        user_input = request.POST.get("user_input", "").strip().lower()
+        user_input_original = request.POST.get("user_input", "")
+        user_input = re.sub(r"[^\wа-яіїєґ\s]+", "", user_input_original.strip().lower())
+        user_input = re.sub(r"\s+", " ", user_input).strip()
 
         # Київський час
         kyiv_tz = pytz.timezone("Europe/Kyiv")
@@ -52,7 +55,7 @@ def index_page(request):
         if user_input != "очистити чат":
             index = len(chat_history)
             chat_history[index] = {
-                "user": user_input,
+                "user": user_input_original,
                 "bot": response
             }
 

@@ -7,7 +7,9 @@
     <div class="chat-output">
         {% if chat_history %}
             {% for item in chat_history %}
-                <div class="chat-message user"><strong>Запит:</strong> {{ item.user }}</div>
+                <div class="user-right">
+                    <div class="chat-message user"><strong>Запит:</strong> {{ item.user }}</div>
+                </div>
                 <div class="chat-message bot"><strong>Відповідь:</strong> {{ item.bot }}</div>
                 <br>
             {% endfor %}
