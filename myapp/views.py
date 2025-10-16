@@ -3,12 +3,14 @@ import re
 import os
 import requests
 from django.http import JsonResponse
+from dotenv import load_dotenv
 
 
 # =================================================================
 # ||                   ТЕКСТОВИЙ ЧАТ-БОТ                         ||
 # =================================================================
 def text_chat_bot(user_input: str, context_messages: list) -> str:
+    load_dotenv()  # завантажує .env
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
     if not GROQ_API_KEY:
         raise RuntimeError("Відсутній API ключ. Будь ласка, встановіть змінну середовища GROQ_API_KEY.")
