@@ -17,13 +17,9 @@
 				<img src="{% static 'myapp/images/logo.png' %}" alt="logo.png">
 			</div>
 			<hr>
-			<div class="navbar">
-				<form method="post" action="{% url 'index' %}">
-    				{% csrf_token %}
-    				<input type="hidden" name="user_input" value="очистити чат">
-    				<button type="submit" class="global-button">Очистити чат</button>
-				</form>
-			</div>
+				<div class="navbar">
+					<button id="navbar-clear-btn" class="global-button" type="button">Очистити чат</button>
+				</div>
 		</div>
 
 		<div class="table-content">

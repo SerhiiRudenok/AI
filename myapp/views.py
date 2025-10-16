@@ -1,65 +1,80 @@
 from django.shortcuts import render
-from datetime import datetime
-import pytz  # для роботи з часовими поясами
-import random
 import re
+import os
+import requests
+from django.http import JsonResponse
 
-# Випадкові відповіді
-random_responses = [
-    # Приказки
-    "Не той друг, що медом маже, а той, що правду каже.",
-    "Без труда нема плода.",
-    "Слово — не горобець, вилетить — не впіймаєш.",
-    "Де сила не візьме, там розум допоможе.",
 
-    # Жарти
-    "Мозок — це як парашут: працює лише коли відкритий!",
-    "Не хвилюйся, якщо щось не працює — можливо, воно просто відпочиває.",
-    "Інтернет — це місце, де ти шукаєш одне, а знаходиш меми.",
-    "Краще бути оптимістом і помилятись, ніж песимістом і мати рацію.",
+# =================================================================
+# ||                   ТЕКСТОВИЙ ЧАТ-БОТ                         ||
+# =================================================================
+def text_chat_bot(user_input: str, context_messages: list) -> str:
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+    if not GROQ_API_KEY:
+        raise RuntimeError("Відсутній API ключ. Будь ласка, встановіть змінну середовища GROQ_API_KEY.")
 
-    # Філософські цитати
-    "Світ змінюється не тими, хто чекає, а тими, хто діє.",
-    "Мудрість приходить не з віком, а з досвідом.",
-    "Той, хто знає мету — знайде шлях.",
-    "Щастя — це не пункт призначення, а спосіб подорожі.",
-    "Найдовша дорога починається з першого кроку."
-]
+    MODEL = "llama-3.3-70b-versatile"
+    GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# Історія чату
-chat_history = {}
+    system_prompt = (
+        "Ти — розумний і доброзичливий український асистент. "
+        "Тебе звуть Умка. Відповідай коротко, але по суті, природною українською мовою."
+    )
 
-def index_page(request):
-    if request.method == "POST":
-        user_input_original = request.POST.get("user_input", "")
-        user_input = re.sub(r"[^\wа-яіїєґ\s]+", "", user_input_original.strip().lower())
-        user_input = re.sub(r"\s+", " ", user_input).strip()
+    # формуємо історію діалогу: system + попередні повідомлення + нове
+    messages = [{"role": "system", "content": system_prompt}] + context_messages + [
+        {"role": "user", "content": user_input}
+    ]
 
-        # Київський час
-        kyiv_tz = pytz.timezone("Europe/Kyiv")
-        now_kyiv = datetime.now(kyiv_tz)
-
-        if user_input == "дата":
-            response = now_kyiv.strftime("%d.%m.%Y")
-        elif user_input == "час":
-            response = now_kyiv.strftime("%H:%M:%S")
-        elif user_input == "очистити чат":
-            chat_history.clear()
-            response = ""
-        else:
-            last_response = list(chat_history.values())[-1]["bot"] if chat_history else None
-            response = random.choice(random_responses)
-            while response == last_response:
-                response = random.choice(random_responses)
-
-        if user_input != "очистити чат":
-            index = len(chat_history)
-            chat_history[index] = {
-                "user": user_input_original,
-                "bot": response
-            }
-
-    context = {
-        "chat_history": chat_history.values()
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
     }
-    return render(request, "myapp/index.html", context)
+
+    payload = {
+        "model": MODEL,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 512,
+        "stream": False
+    }
+
+    try:
+        res = requests.post(GROQ_URL, headers=headers, json=payload)
+        if res.status_code != 200:
+            return "Вибач, сталася помилка при зверненні до Штучного Інтелекту!"
+        data = res.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        return "Вибач, сталася помилка при зверненні до Штучного Інтелекту!"
+
+
+# =================================================================
+# ||              ГОЛОВНА СТОРІНКА З ЧАТ-БОТОМ                   ||
+# =================================================================
+def index_page(request):
+    # 1. Отримуємо історію з сесії
+    if request.method == "POST":
+        chat_history = request.session.get("chat_history", [])
+        user_input_original = request.POST.get("user_input", "")
+        user_input = re.sub(r"\s+", " ", user_input_original).strip()
+
+        # 2. Команда для очищення чату
+        if (user_input.lower() == "очистити чат") or (user_input.lower() == "очисти чат"):
+            request.session["chat_history"] = []
+            return JsonResponse({"cleared": True})
+
+        # 3. Отримуємо відповідь від чат-бота (з контекстом)
+        response = text_chat_bot(user_input, chat_history)
+
+        # 4. Зберігаємо історію в сесії
+        chat_history.append({"role": "user", "content": user_input_original})
+        chat_history.append({"role": "assistant", "content": response})
+        request.session["chat_history"] = chat_history
+        request.session.modified = True  # оновлюємо сесію
+
+
+        return JsonResponse({"bot": response})
+
+    request.session["chat_history"] = []
+    return render(request, "myapp/index.html", {"chat_history": []})

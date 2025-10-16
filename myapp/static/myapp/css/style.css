@@ -34,6 +34,11 @@ body {
         text-align: center;
     }
 
+    .image-container img {
+    width: 90px;
+    object-fit: contain;
+    }
+
     .global-button {
         width: 100%;
     }

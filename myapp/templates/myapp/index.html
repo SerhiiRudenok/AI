@@ -14,7 +14,6 @@
                 <br>
             {% endfor %}
         {% else %}
-            <div class="chat-message bot">Почнемо спілкування. Введіть "дата" або "час" </div>
             <br>
         {% endif %}
     </div>
@@ -22,21 +21,129 @@
     <hr>
 
     <div class="base-card">
-        <form method="post" class="chat-form">
+        <form id="chat-form" method="post" class="chat-form">
             {% csrf_token %}
-            <input type="text" name="user_input" placeholder="Напишіть: дата або час" required>
-            <button type="submit">Відправити</button>
+            <input id="user_input" type="text" name="user_input" placeholder="Запитайте будь-що" required autocomplete="off">
+            <button id="send-btn" type="submit">Відправити</button>
         </form>
     </div>
 </div>
 
 <script>
-    window.onload = function() {
-        const chatOutput = document.querySelector('.chat-output');
-        if (chatOutput) {
-            chatOutput.scrollTop = chatOutput.scrollHeight;
+document.addEventListener('DOMContentLoaded', function() {
+    const chatOutput = document.querySelector('.chat-output');
+    const form = document.querySelector('#chat-form');
+    const inputField = document.querySelector('#user_input');
+    const sendBtn = document.querySelector('#send-btn');
+    const navbarClearBtn = document.querySelector('#navbar-clear-btn');
+
+    function scrollDown() {
+        if (chatOutput) chatOutput.scrollTop = chatOutput.scrollHeight;
+    }
+
+    // отримати CSRF token з cookie (Django)
+    function getCookie(name) {
+        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? v.pop() : '';
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    navbarClearBtn.addEventListener('click', async function() {
+        try {
+            const res = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-CSRFToken': csrftoken
+                },
+                body: new URLSearchParams({ user_input: 'очистити чат' })
+            });
+            const data = await res.json();
+            if (data.cleared) {
+                if (chatOutput) chatOutput.innerHTML = "";
+                if (inputField) inputField.focus();
+            }
+        } catch (err) {
+            console.error(err);
         }
-    };
+    });
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        // тимчасово додати в UI "Запит" локально
+        const userHtml = `<div class="user-right"><div class="chat-message user"><strong>Запит:</strong> ${escapeHtml(text)}</div></div>`;
+        const botPlaceholder = `<div class="chat-message bot"><strong>Відповідь:</strong> <em>очікування відповіді...</em></div><br>`;
+        if (chatOutput) {
+            chatOutput.insertAdjacentHTML('beforeend', userHtml + botPlaceholder);
+            scrollDown();
+        }
+
+        // очистити поле і зберегти фокус
+        inputField.value = '';
+        inputField.focus();
+
+        try {
+            const res = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-CSRFToken': csrftoken
+                },
+                body: new URLSearchParams({ user_input: text })
+            });
+
+            if (!res.ok) throw new Error('Network response was not ok');
+
+            // Якщо сервер повертає HTML або JSON — оброби відповідно.
+            // Нижче приклад, коли сервер повертає JSON: { bot: "..." }
+            const data = await res.json();
+
+            // видалити останній placeholder bot та замінити реальним текстом
+            // (припускаємо, що останній bot-повідомлення — це placeholder)
+            const botNodes = chatOutput.querySelectorAll('.chat-message.bot');
+            const lastBot = botNodes[botNodes.length - 1];
+            if (lastBot) {
+                if (data.cleared) {
+                    chatOutput.innerHTML = "";
+                } else if (data.bot) {
+                    lastBot.innerHTML = `<strong>Відповідь:</strong> ${escapeHtml(data.bot)}`;
+                }
+            }
+            scrollDown();
+        } catch (err) {
+            console.error(err);
+            if (chatOutput) {
+                const botNodes = chatOutput.querySelectorAll('.chat-message.bot');
+                const lastBot = botNodes[botNodes.length - 1];
+                if (lastBot) {
+                    lastBot.innerHTML = `<strong>Відповідь:</strong> <em>Помилка: ${escapeHtml(err.message)}</em>`;
+                }
+                scrollDown();
+            }
+            inputField.focus();
+        }
+    });
+
+    // відправка Enter
+    inputField.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            form.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
+
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+});
 </script>
 
 {% endblock %}
